@@ -11,7 +11,7 @@
  * * que lo componen.
  */
 
-import { COLORS } from '../helpers/colors.ts';
+import { COLORS } from "../helpers/colors.ts";
 
 //! Tarea: crear un QueryBuilder para construir consultas SQL
 /**
@@ -50,37 +50,61 @@ class QueryBuilder {
   }
 
   select(...fields: string[]): QueryBuilder {
-    throw new Error('Method not implemented.');
+    if (this.fields.length > 0)
+      throw new Error("Cannot duplicate Select command");
+
+    fields.length > 0 ? (this.fields = fields) : this.fields.push("*");
+
+    return this;
   }
 
   where(condition: string): QueryBuilder {
-    throw new Error('Method not implemented.');
+    this.conditions.length > 0
+      ? this.conditions.push("AND", condition)
+      : this.conditions.push("where", condition);
+
+    return this;
   }
 
-  orderBy(field: string, direction: 'ASC' | 'DESC' = 'ASC'): QueryBuilder {
-    throw new Error('Method not implemented.');
+  orderBy(field: string, direction: "ASC" | "DESC" = "ASC"): QueryBuilder {
+    this.orderFields.push(`ORDER BY ${field} ${direction}`);
+
+    return this;
   }
 
   limit(count: number): QueryBuilder {
-    throw new Error('Method not implemented.');
+    if (this.limitCount) throw new Error("Cannot duplicate limit command");
+
+    this.limitCount = count;
+
+    return this;
   }
 
   execute(): string {
+    const fields = this.fields.join(", ");
+
+    const whereClause = this.conditions.join(" ");
+
+    const orderByClause = this.orderFields.join(", ");
+
+    const limitClause = this.limitCount ? `LIMIT ${this.limitCount}` : "";
+
     // Select id, name, email from users where age > 18 and country = 'Cri' order by name ASC limit 10;
-    throw new Error('Method not implemented.');
+    return `Select ${fields} from ${this.table} ${whereClause} ${orderByClause} ${limitClause}`;
   }
 }
 
 function main() {
-  const usersQuery = new QueryBuilder('users')
-    .select('id', 'name', 'email')
-    .where('age > 18')
+  const usersQuery = new QueryBuilder("users")
+    .select("id", "name", "email")
+    .where("age > 18")
     .where("country = 'Cri'") // Esto debe de hacer una condición AND
-    .orderBy('name', 'ASC')
+    .orderBy("name", "ASC")
+    .orderBy("age", "DESC")
     .limit(10)
     .execute();
 
-  console.log('%cConsulta:\n', COLORS.red);
+  console.log("%cConsulta:\n", COLORS.red);
   console.log(usersQuery);
 }
 
